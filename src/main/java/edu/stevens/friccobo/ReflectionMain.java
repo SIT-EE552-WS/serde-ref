@@ -5,25 +5,34 @@ import java.util.List;
 
 public class ReflectionMain {
     public static void main(String[] args) {
-        Class<SuperHeroV2> clazz = SuperHeroV2.class;
-        SuperHeroV2 thor = new SuperHeroV2("Thor", List.of("thunder", "lightning"));
+        Superhero superhero = new Superhero("Batman", List.of("lots of money", "martial arts"));
 
-
-        Field[] fields = clazz.getFields();
-        for (Field field : fields) {
-            System.out.println(field);
+        Class<Superhero> superheroClass = Superhero.class;
+        System.out.println("{");
+        for (Field declaredField : superheroClass.getDeclaredFields()) {
+            try {
+                declaredField.setAccessible(true);
+                if(declaredField.getType().isAssignableFrom(String.class)){
+                    System.out.println("\"" + declaredField.getName() + "\": \""+declaredField.get(superhero)+"\"");
+                } else if(declaredField.getType().isAssignableFrom(List.class)) {
+                    System.out.println("\"" + declaredField.getName() + "\": [");
+                    Object o = declaredField.get(superhero);
+                    boolean first = true;
+                    if(o instanceof List list){
+                        for (Object o1 : list) {
+                            if(!first){
+                                System.out.print(",");
+                            }
+                            first = false;
+                            System.out.println("\"" + o1 + "\"");
+                        }
+                    }
+                    System.out.println("]");
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
-
-        try {
-            Field name = clazz.getField("name");
-
-            name.setAccessible(true);
-            name.set(thor, "Someone else");
-
-            System.out.println(thor);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
+        System.out.println("}");
     }
 }
